@@ -25,43 +25,43 @@ local RayfieldLibrary = {
     Flags = {},
     Theme = {
         Default = {
-            TextFont = "Default",
-            TextColor = Color3.fromRGB(232, 238, 248),
-            
-            Background = Color3.fromRGB(10, 14, 22),
-            Topbar = Color3.fromRGB(15, 20, 30),
-            Shadow = Color3.fromRGB(3, 6, 12),
-            
-            NotificationBackground = Color3.fromRGB(13, 18, 28),
-            NotificationActionsBackground = Color3.fromRGB(24, 32, 46),
-            
-            TabBackground = Color3.fromRGB(20, 27, 39),
-            TabStroke = Color3.fromRGB(38, 49, 68),
-            TabBackgroundSelected = Color3.fromRGB(45, 82, 125),
-            TabTextColor = Color3.fromRGB(190, 201, 218),
-            SelectedTabTextColor = Color3.fromRGB(245, 249, 255),
-            
-            ElementBackground = Color3.fromRGB(17, 23, 34),
-            ElementBackgroundHover = Color3.fromRGB(22, 30, 44),
-            SecondaryElementBackground = Color3.fromRGB(12, 17, 26),
-            ElementStroke = Color3.fromRGB(31, 42, 58),
-            SecondaryElementStroke = Color3.fromRGB(25, 34, 48),
-            
-            SliderBackground = Color3.fromRGB(31, 62, 96),
-            SliderProgress = Color3.fromRGB(64, 135, 220),
-            SliderStroke = Color3.fromRGB(82, 153, 235),
-            
-            ToggleBackground = Color3.fromRGB(18, 24, 35),
-            ToggleEnabled = Color3.fromRGB(55, 125, 210),
-            ToggleDisabled = Color3.fromRGB(65, 76, 94),
-            ToggleEnabledStroke = Color3.fromRGB(83, 157, 240),
-            ToggleDisabledStroke = Color3.fromRGB(91, 103, 123),
-            ToggleEnabledOuterStroke = Color3.fromRGB(45, 61, 82),
-            ToggleDisabledOuterStroke = Color3.fromRGB(35, 45, 61),
-            
-            InputBackground = Color3.fromRGB(14, 20, 30),
-            InputStroke = Color3.fromRGB(43, 56, 76),
-            PlaceholderColor = Color3.fromRGB(125, 140, 161)
+			TextFont = "Default", -- Default will use the various font faces used across Rayfield
+			TextColor = Color3.fromRGB(240, 240, 240),
+
+			Background = Color3.fromRGB(25, 25, 25),
+			Topbar = Color3.fromRGB(34, 34, 34),
+			Shadow = Color3.fromRGB(20, 20, 20),
+
+			NotificationBackground = Color3.fromRGB(20, 20, 20),
+			NotificationActionsBackground = Color3.fromRGB(230, 230, 230),
+
+			TabBackground = Color3.fromRGB(80, 80, 80),
+			TabStroke = Color3.fromRGB(85, 85, 85),
+			TabBackgroundSelected = Color3.fromRGB(210, 210, 210),
+			TabTextColor = Color3.fromRGB(240, 240, 240),
+			SelectedTabTextColor = Color3.fromRGB(50, 50, 50),
+
+			ElementBackground = Color3.fromRGB(35, 35, 35),
+			ElementBackgroundHover = Color3.fromRGB(40, 40, 40),
+			SecondaryElementBackground = Color3.fromRGB(25, 25, 25), -- For labels and paragraphs
+			ElementStroke = Color3.fromRGB(50, 50, 50),
+			SecondaryElementStroke = Color3.fromRGB(40, 40, 40), -- For labels and paragraphs
+
+			SliderBackground = Color3.fromRGB(43, 105, 159),
+			SliderProgress = Color3.fromRGB(43, 105, 159),
+			SliderStroke = Color3.fromRGB(48, 119, 177),
+
+			ToggleBackground = Color3.fromRGB(30, 30, 30),
+			ToggleEnabled = Color3.fromRGB(0, 146, 214),
+			ToggleDisabled = Color3.fromRGB(100, 100, 100),
+			ToggleEnabledStroke = Color3.fromRGB(0, 170, 255),
+			ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
+			ToggleEnabledOuterStroke = Color3.fromRGB(100, 100, 100),
+			ToggleDisabledOuterStroke = Color3.fromRGB(65, 65, 65),
+
+			InputBackground = Color3.fromRGB(30, 30, 30),
+			InputStroke = Color3.fromRGB(65, 65, 65),
+			PlaceholderColor = Color3.fromRGB(178, 178, 178)
         },
         Light = {
             TextFont = "Gotham",                    -- Default will use the various font faces used across Rayfield
@@ -175,33 +175,34 @@ local Notifications = Rayfield.Notifications
 local SelectedTheme = RayfieldLibrary.Theme.Default
 
 function ChangeTheme(ThemeName)
-    SelectedTheme = RayfieldLibrary.Theme[ThemeName]
-    for _, obj in ipairs(Rayfield:GetDescendants()) do
-        if obj.ClassName == "TextLabel" or obj.ClassName == "TextBox" or obj.ClassName == "TextButton" then
-            if SelectedTheme.TextFont ~= "Default" then
-                obj.TextColor3 = SelectedTheme.TextColor
-                obj.Font = SelectedTheme.TextFont
-            end
-        end
-    end
+	SelectedTheme = RayfieldLibrary.Theme[ThemeName]
+	for _, obj in ipairs(Rayfield:GetDescendants()) do
+		if obj.ClassName == "TextLabel" or obj.ClassName == "TextBox" or obj.ClassName == "TextButton" then
+			if SelectedTheme.TextFont ~= "Default" then 
+				obj.TextColor3 = SelectedTheme.TextColor
+				obj.Font = SelectedTheme.TextFont
+			end
+		end
+	end
 
-    Rayfield.Main.BackgroundColor3 = SelectedTheme.Background
-    Rayfield.Main.Topbar.BackgroundColor3 = SelectedTheme.Topbar
-    Rayfield.Main.Topbar.CornerRepair.BackgroundColor3 = SelectedTheme.Topbar
-    Rayfield.Main.Shadow.Image.ImageColor3 = SelectedTheme.Shadow
+	Rayfield.Main.BackgroundColor3 = SelectedTheme.Background
+	Rayfield.Main.Topbar.BackgroundColor3 = SelectedTheme.Topbar
+	Rayfield.Main.Topbar.CornerRepair.BackgroundColor3 = SelectedTheme.Topbar
+	Rayfield.Main.Shadow.Image.ImageColor3 = SelectedTheme.Shadow
 
-    Rayfield.Main.Topbar.ChangeSize.ImageColor3 = SelectedTheme.TextColor
-    Rayfield.Main.Topbar.Hide.ImageColor3 = SelectedTheme.TextColor
-    Rayfield.Main.Topbar.Theme.ImageColor3 = SelectedTheme.TextColor
+	Rayfield.Main.Topbar.ChangeSize.ImageColor3 = SelectedTheme.TextColor
+	Rayfield.Main.Topbar.Hide.ImageColor3 = SelectedTheme.TextColor
+	Rayfield.Main.Topbar.Theme.ImageColor3 = SelectedTheme.TextColor
 
-    for _, TabPage in ipairs(Elements:GetChildren()) do
-        for _, Element in ipairs(TabPage:GetChildren()) do
-            if Element.ClassName == "Frame" and Element.Name ~= "Placeholder" and Element.Name ~= "SectionSpacing" and Element.Name ~= "SectionTitle" then
-                Element.BackgroundColor3 = SelectedTheme.ElementBackground
-                Element.UIStroke.Color = SelectedTheme.ElementStroke
-            end
-        end
-    end
+	for _, TabPage in ipairs(Elements:GetChildren()) do
+		for _, Element in ipairs(TabPage:GetChildren()) do
+			if Element.ClassName == "Frame" and Element.Name ~= "Placeholder" and Element.Name ~= "SectionSpacing" and Element.Name ~= "SectionTitle"  then
+				Element.BackgroundColor3 = SelectedTheme.ElementBackground
+				Element.UIStroke.Color = SelectedTheme.ElementStroke
+			end
+		end
+	end
+
 end
 
 local function AddDraggingFunctionality(DragPoint, Main)
