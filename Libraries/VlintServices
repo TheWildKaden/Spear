@@ -1,0 +1,478 @@
+--!strict
+
+local Utility = {}
+
+local CloneRef = cloneref or function(value)
+	return value
+end
+
+--//==================================================
+--// Services
+--//==================================================
+
+local ServiceCache = {}
+
+Utility.Services = setmetatable({}, {
+	__index = function(_, name)
+		if ServiceCache[name] then
+			return ServiceCache[name]
+		end
+
+		local success, service = pcall(function()
+			return CloneRef(game:GetService(name))
+		end)
+
+		if not success or not service then
+			error(("Invalid service: %s"):format(tostring(name)), 2)
+		end
+
+		ServiceCache[name] = service
+
+		return service
+	end
+})
+
+function Utility.GetService(name)
+	return Utility.Services[name]
+end
+
+function Utility.ClearServiceCache(name)
+	if name then
+		ServiceCache[name] = nil
+	else
+		table.clear(ServiceCache)
+	end
+end
+
+--//==================================================
+--// Instances
+--//==================================================
+
+function Utility.Find(root, ...)
+	local current = root
+
+	for _, name in ipairs({...}) do
+		if not current then
+			return nil
+		end
+
+		current = current:FindFirstChild(name)
+	end
+
+	return current
+end
+
+function Utility.WaitFor(root, ...)
+	local current = root
+
+	for _, name in ipairs({...}) do
+		if not current then
+			return nil
+		end
+
+		current = current:WaitForChild(name)
+	end
+
+	return current
+end
+
+function Utility.FindClass(root, className)
+	if not root then
+		return nil
+	end
+
+	return root:FindFirstChildOfClass(className)
+end
+
+function Utility.GetChildren(root)
+	if not root then
+		return {}
+	end
+
+	return root:GetChildren()
+end
+
+function Utility.GetDescendants(root)
+	if not root then
+		return {}
+	end
+
+	return root:GetDescendants()
+end
+
+function Utility.IsInstance(value, className)
+	if typeof(value) ~= "Instance" then
+		return false
+	end
+
+	return not className or value:IsA(className)
+end
+
+function Utility.IsA(value, className)
+	return Utility.IsInstance(value, className)
+end
+
+--//==================================================
+--// Require
+--//==================================================
+
+local ModuleCache = {}
+
+function Utility.Require(module, name, cache)
+	if type(module) == "string" then
+		local current = game
+
+		for part in module:gmatch("[^%.]+") do
+			current = current:FindFirstChild(part)
+
+			if not current then
+				error(
+					("Module '%s' was not found%s"):format(
+						part,
+						name and (" while loading " .. name) or ""
+					),
+					2
+				)
+			end
+		end
+
+		module = current
+	end
+
+	if typeof(module) ~= "Instance" then
+		error(
+			("Expected ModuleScript, got %s"):format(
+				typeof(module)
+			),
+			2
+		)
+	end
+
+	if not module:IsA("ModuleScript") then
+		error(
+			("%s is not a ModuleScript"):format(
+				module:GetFullName()
+			),
+			2
+		)
+	end
+
+	if cache and ModuleCache[module] ~= nil then
+		return ModuleCache[module]
+	end
+
+	local success, result = pcall(require, module)
+
+	if not success then
+		error(
+			("Failed to require %s%s:\n%s"):format(
+				module:GetFullName(),
+				name and (" [" .. name .. "]") or "",
+				tostring(result)
+			),
+			2
+		)
+	end
+
+	if cache then
+		ModuleCache[module] = result
+	end
+
+	return result
+end
+
+function Utility.ClearModuleCache(module)
+	if module then
+		ModuleCache[module] = nil
+	else
+		table.clear(ModuleCache)
+	end
+end
+
+--//==================================================
+--// Hierarchy
+--//==================================================
+
+local function FormatIndex(name)
+	if name:match("^[%a_][%w_]*$") then
+		return "." .. name
+	end
+
+	return ("[%q]"):format(name)
+end
+
+function Utility.GetPath(instance, useServices)
+	if typeof(instance) ~= "Instance" then
+		return nil
+	end
+
+	local parts = {}
+	local current = instance
+
+	while current and current ~= game do
+		table.insert(parts, 1, current)
+		current = current.Parent
+	end
+
+	if current ~= game then
+		return nil
+	end
+
+	local first = parts[1]
+
+	if useServices and first then
+		local service = game:GetService(first.Name)
+
+		if service == first then
+			table.remove(parts, 1)
+
+			local path = ('Utility.GetService("%s")'):format(first.Name)
+
+			for _, object in ipairs(parts) do
+				path ..= FormatIndex(object.Name)
+			end
+
+			return path
+		end
+	end
+
+	local path = "game"
+
+	for _, object in ipairs(parts) do
+		path ..= FormatIndex(object.Name)
+	end
+
+	return path
+end
+
+--//==================================================
+--// Functions
+--//==================================================
+
+function Utility.Missing(expectedType, value, fallback)
+	if type(value) == expectedType then
+		return value
+	end
+
+	return fallback
+end
+
+function Utility.Try(callback, ...)
+	return pcall(callback, ...)
+end
+
+function Utility.TryCall(callback, ...)
+	if type(callback) ~= "function" then
+		return false, "Expected function"
+	end
+
+	return pcall(callback, ...)
+end
+
+function Utility.Noop()
+end
+
+--//==================================================
+--// Tables
+--//==================================================
+
+function Utility.ShallowCopy(source)
+	local result = {}
+
+	for key, value in pairs(source) do
+		result[key] = value
+	end
+
+	return result
+end
+
+function Utility.Merge(...)
+	local result = {}
+
+	for _, source in ipairs({...}) do
+		if type(source) == "table" then
+			for key, value in pairs(source) do
+				result[key] = value
+			end
+		end
+	end
+
+	return result
+end
+
+function Utility.IsEmpty(tableValue)
+	return next(tableValue) == nil
+end
+
+function Utility.Count(tableValue)
+	local count = 0
+
+	for _ in pairs(tableValue) do
+		count += 1
+	end
+
+	return count
+end
+
+function Utility.Contains(tableValue, value)
+	for _, item in pairs(tableValue) do
+		if item == value then
+			return true
+		end
+	end
+
+	return false
+end
+
+function Utility.FindValue(tableValue, value)
+	for key, item in pairs(tableValue) do
+		if item == value then
+			return key
+		end
+	end
+
+	return nil
+end
+
+--//==================================================
+--// Strings
+--//==================================================
+
+function Utility.Trim(value)
+	return tostring(value):match("^%s*(.-)%s*$")
+end
+
+function Utility.IsBlank(value)
+	return Utility.Trim(value) == ""
+end
+
+function Utility.StartsWith(value, prefix)
+	return tostring(value):sub(1, #prefix) == prefix
+end
+
+function Utility.EndsWith(value, suffix)
+	value = tostring(value)
+
+	return suffix == ""
+		or value:sub(-#suffix) == suffix
+end
+
+--//==================================================
+--// Players
+--//==================================================
+
+function Utility.GetLocalPlayer()
+	return Utility.Services.Players.LocalPlayer
+end
+
+function Utility.GetPlayer(name)
+	local Players = Utility.Services.Players
+
+	if not name then
+		return Players.LocalPlayer
+	end
+
+	name = tostring(name):lower()
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player.Name:lower() == name
+			or player.DisplayName:lower() == name
+		then
+			return player
+		end
+	end
+
+	return nil
+end
+
+function Utility.GetCharacter(player)
+	player = player or Utility.GetLocalPlayer()
+
+	return player and player.Character
+end
+
+function Utility.GetHumanoid(character)
+	character = character or Utility.GetCharacter()
+
+	return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+function Utility.GetRoot(character)
+	local humanoid = Utility.GetHumanoid(character)
+
+	return humanoid and humanoid.RootPart
+end
+
+--//==================================================
+--// Timing
+--//==================================================
+
+function Utility.Wait(seconds)
+	task.wait(seconds or 0)
+end
+
+function Utility.Delay(seconds, callback, ...)
+	if type(callback) ~= "function" then
+		return nil
+	end
+
+	return task.delay(seconds or 0, callback, ...)
+end
+
+function Utility.Spawn(callback, ...)
+	if type(callback) ~= "function" then
+		return nil
+	end
+
+	return task.spawn(callback, ...)
+end
+
+--//==================================================
+--// Global State
+--//==================================================
+
+local Global = getgenv and getgenv() or _G
+
+function Utility.GetGlobal(name, default)
+	local value = Global[name]
+
+	if value == nil then
+		return default
+	end
+
+	return value
+end
+
+function Utility.SetGlobal(name, value)
+	Global[name] = value
+
+	return value
+end
+
+function Utility.HasGlobal(name)
+	return Global[name] ~= nil
+end
+
+function Utility.LoadGuard(name, debugName)
+	if Global[name] and not Global[debugName] then
+		return false
+	end
+
+	Global[name] = true
+
+	return true
+end
+
+--//==================================================
+--// Debug
+--//==================================================
+
+function Utility.Warn(...)
+	warn("[Utility]", ...)
+end
+
+function Utility.Error(message, level)
+	error("[Utility] " .. tostring(message), (level or 1) + 1)
+end
+
+return Utility
